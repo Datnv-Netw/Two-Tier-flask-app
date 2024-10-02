@@ -23,7 +23,10 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSClusterPolicy" {
 
 # Get VPC data
 data "aws_vpc" "default" {
-  default = true
+  filter {
+    name   = "vpc-id"
+    values = ["vpc-0a96ccab4bc26016a"]  # Thay thế bằng ID VPC của bạn
+  }
 }
 
 # Get public subnets for cluster

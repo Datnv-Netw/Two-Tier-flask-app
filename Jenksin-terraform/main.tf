@@ -30,7 +30,7 @@ resource "aws_iam_instance_profile" "example_profile" {
 resource "aws_security_group" "Jenkins-sg" {
   name        = "Jenkins-Security Group"
   description = "Open 22,443,80,8080,9000,8086,9090,5000"
-
+  vpc_id      = "vpc-0a96ccab4bc26016a"
   # Define a single ingress rule to allow traffic on all specified ports
   ingress = [
     for port in [22, 80, 443, 8080, 9000, 3000, 5000, 8086, 9090] : {
@@ -57,15 +57,38 @@ resource "aws_security_group" "Jenkins-sg" {
     Name = "Jenkins-sg"
   }
 }
+data "aws_vpc" "default" {
+  filter {
+    name   = "vpc-id"
+    values = ["vpc-0a96ccab4bc26016a"]  # ID VPC của bạn
+  }
+}
+
+# Lấy Subnet công (Public Subnet)
+data "aws_subnet" "public" {
+  filter {
+    name   = "subnet-id"
+    values = ["subnet-03211d3259f7b0dc5"]  # ID Subnet công của bạn
+  }
+}
+
+# Lấy Subnet riêng (Private Subnet)
+data "aws_subnet" "private" {
+  filter {
+    name   = "subnet-id"
+    values = ["subnet-0b02f156a5cea73af"]  # ID Subnet riêng của bạn
+  }
+}
 
 resource "aws_instance" "web" {
-  ami                    = "ami-0522ab6e1ddcc7055"
+  ami                    = "ami-005fc0f236362e99f"
   instance_type          = "t2.large"
   key_name               = "datcyber"
   vpc_security_group_ids = [aws_security_group.Jenkins-sg.id]
   user_data              = templatefile("./script.sh", {})
-  iam_instance_profile   = aws_iam_instance_profile.example_profile.name
-
+  iam_instance_profile   = aws_iam_instance_profile.example_profile.name  
+  subnet_id              = data.aws_subnet.public.id
+  
   tags = {
     Name = "Jenkins"
   }
